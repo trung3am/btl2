@@ -32,8 +32,8 @@ class Game:
   def __init__(self, win) -> None:
     self.win = win
     self.lastMoveIdx = (0,0)
-    self.board = [[0, 1, 1, 1, 1],
-                  [1, 1, 0, 0, 1],
+    self.board = [[1, 1, 1, 1, 1],
+                  [1, 0, 0, 0, 1],
                   [1, 0, 0, 0, -1],
                   [-1, 0, 0, 0, -1],
                   [-1, -1, -1, -1, -1]]
@@ -72,6 +72,7 @@ class Game:
     
   def makeMove(self, move, player):
     if self.checkWin(): return False
+    if move[1][0] < 0 or move[1][1] < 0: return False
     if move[0] == move[1]:
       print("cannot make move without moving")
       return False
@@ -210,8 +211,6 @@ class Game:
     for i in range(len(self.board)):
       for j in range(len(self.board[i])):
         Game.checkStuck(cBoard,(i,j),player)
-    print(player)
-    print(cBoard)
     for i in range(len(self.board)):
       for j in range(len(self.board[i])):
         if cBoard[i][j]*player <=0: continue
@@ -223,18 +222,26 @@ class Game:
         
     return
 
-  
+  def countPiece(self, board, player):
+    count = 0
+    for i in board:
+      for j in i:
+        if j == player: count+=1
+
+    return count
+
   def checkWin(self):
-    for i in self.board:
-      if len(set(i)) == 3: return False
-    return True
+    pnum = self.countPiece(self.board,1)
+    if pnum == 16 or pnum == 0: return True
+    return False
   
   def checkWinSide(self, side):
-    for i in self.board:
-      if len(set(i)) == 3: return 0
-    if self.lastMoveIdx != side: return -1
-    return 1
-  
+    pnum = self.countPiece(self.board,side)
+    if pnum == 16: return 1
+    if pnum == 0: return -1
+    return 0
+
+
         
 # 00 02 04 11 13 20 22 24 31 33 40 42 44
 

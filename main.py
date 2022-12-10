@@ -39,6 +39,7 @@ def main():
 	while run:
 		clock.tick(FPS)
 		if  game.checkWin():
+			print("win" , game.board)
 			wl = "Win" if game.board[game.lastMoveIdx[0]][game.lastMoveIdx[1]] ==1 else "Lose"
 			img = font.render('You ' + wl + ' !!!', True, RED)
 			win.blit(img, (300, 20))
@@ -55,10 +56,19 @@ def main():
 						if game.makeMove(((sRow,sCol),(row,col)),playerside):
 							select = False
 							game.draw()
+							res = ""
+							print(game.board)
+							for i in game.board:
+								for j in i:
+									res += str(j) + ' '
+							print(res)
 							bot.move(game.board,game.board,botside,0,0)
-							time.sleep(1.5)
+							
+							# time.sleep(1.5)
 							game.draw()
+							print(game.board)
 							if game.checkWin():
+								print("win2" , game.board)
 								wl = "Win" if game.board[game.lastMoveIdx[0]][game.lastMoveIdx[1]] ==1 else "Lose"
 								img = font.render('You ' + wl + ' !!!', True, RED)
 								win.blit(img, (300, 20))
@@ -70,6 +80,7 @@ def main():
 					if game.board[row][col] == 0: continue
 					game.select(row,col)
 					if game.checkWin():
+						print("win3" , game.board)
 						wl = "Win" if game.board[game.lastMoveIdx[0]][game.lastMoveIdx[1]] ==1 else "Lose"
 						img = font.render('You ' + wl + ' !!!', True, RED)
 						win.blit(img, (300, 20))

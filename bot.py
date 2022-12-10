@@ -2,6 +2,7 @@ from game import Game
 import random
 import time
 import copy
+
 class Bot:
 	def __init__(self,side, game: Game) -> None:
 		self.game = game
@@ -22,30 +23,46 @@ class Bot:
 			if self.game.makeMove((pick,move),self.side): break
 
 	def move(self, preboard, board, player, remain_time_x, remain_time_o):
-		start = time.time()
-		m = self.minimax(board, player, 0)
-		self.game.makeMove(m,player)
-		print(str(time.time()-start))
+		Node.time = time.time()
+		root = Node(board, None, player,self,0,[],[])
 
-	def minimax(self, board, player, depth):
-		print(depth)
-		heuristic = self.checkWinSide(board, player)
-		if heuristic != 0: return (heuristic,None)
-		pool =[]
-		for i in range(5):
-			for j in range(5):
-				if board[i][j]==player: pool+= self.generateMove((i,j),board,player)
-		for i in pool:
-			m =  None
-			if depth ==0: m = i
-			cBoard = copy.deepcopy(board)
-			self.makeMove(cBoard,i,player)
-			h = self.checkWinSide(cBoard, player)
-			if h == 1: return (h,m)
-			if h == 0: 
-				h = self.minimax(cBoard, player*-1,depth+1)
-				if h[0] == -1: return(h,m)
-		return(h[0],m)
+		m = self.minimax(root, False,player,5,0,16)
+		
+		print(m[1])
+		self.game.makeMove(m[1],player)
+		print(str(time.time()-Node.time))
+
+
+	def minimax(self,node,maxplayer,player,maxDepth,alpha,beta):
+		
+		if maxDepth <= node.depth : return(self.countPiece(node.board, player),node.move)
+
+		if maxplayer:
+			bestVal = 0
+			pool = self.gmove(node)
+			if len(pool) == 0: return (self.countPiece(node.board, player),node.move)
+			res = pool[0].move
+			for i in pool:
+				v = self.minimax(i,not maxplayer, player,maxDepth,alpha,beta)
+				bestVal = max(bestVal,v[0])
+				if node.depth == 0 and bestVal < v[0]:
+					res = i.move
+				alpha = max(alpha,bestVal)
+				if beta <= alpha or bestVal ==16: break
+		else:
+			bestVal = 16
+			pool = self.gmove(node)
+			if len(pool) == 0: return (self.countPiece(node.board, player),node.move)
+			res = pool[0].move
+			for i in pool:
+				v = self.minimax(i,not maxplayer, player,maxDepth,alpha,beta)
+				bestVal = min(bestVal,v[0])
+				if node.depth == 0 and bestVal > v[0]:
+					res = i.move
+				beta = min(beta,bestVal)
+				if beta <= alpha or bestVal == 0: break
+		return (bestVal,res)
+
 
 	def countPiece(self, board, player):
 		count = 0
@@ -55,23 +72,42 @@ class Bot:
 
 		return count
 
+	
+	def gmove(self, node):
+		pool = []
+		for i in range(5):
+			for j in range(5):
+				
+				if node.board[i][j]==node.player: pool+= self.generateMove((i,j),node.board,node.player,node.depth+1,node.pmove1,node.pmove2)
+		# pool.sort()
 
+		return pool
 
-	def generateMove(self, spot,board,player):
+	def generateMove(self, spot,board,player,depth,pmove1,pmove2):
+		
 		res = []
 		i = spot[0]
 		j = spot[1]
-		if self.testMove(board, (spot,(i+1,j)),player): res += [(spot,(i+1,j))]
-		if self.testMove(board, (spot,(i-1,j)),player): res += [(spot,(i-1,j))]
-		if self.testMove(board, (spot,(i,j+1)),player): res += [(spot,(i,j+1))]
-		if self.testMove(board, (spot,(i,j-1)),player): res += [(spot,(i,j-1))]
-		if self.testMove(board, (spot,(i+1,j+1)),player): res += [(spot,(i+1,j+1))]
-		if self.testMove(board, (spot,(i-1,j+1)),player): res += [(spot,(i-1,j+1))]
-		if self.testMove(board, (spot,(i-1,j-1)),player): res += [(spot,(i-1,j-1))]
-		if self.testMove(board, (spot,(i+1,j-1)),player): res += [(spot,(i+1,j-1))]
+		if self.checkRepeat(player,pmove1,pmove2,(spot,(i+1,j))) and self.testMove(board, (spot,(i+1,j)),player): res += [Node(board,(spot,(i+1,j)),player*-1,self,depth,pmove1,pmove2)]
+		if self.checkRepeat(player,pmove1,pmove2,(spot,(i-1,j))) and self.testMove(board, (spot,(i-1,j)),player): res += [Node(board,(spot,(i-1,j)),player*-1,self,depth,pmove1,pmove2)]
+		if self.checkRepeat(player,pmove1,pmove2,(spot,(i,j+1))) and self.testMove(board, (spot,(i,j+1)),player): res += [Node(board,(spot,(i,j+1)),player*-1,self,depth,pmove1,pmove2)]
+		if self.checkRepeat(player,pmove1,pmove2,(spot,(i,j-1))) and self.testMove(board, (spot,(i,j-1)),player): res += [Node(board,(spot,(i,j-1)),player*-1,self,depth,pmove1,pmove2)]
+		if self.checkRepeat(player,pmove1,pmove2,(spot,(i+1,j+1))) and self.testMove(board, (spot,(i+1,j+1)),player): res += [Node(board,(spot,(i+1,j+1)),player*-1,self,depth,pmove1,pmove2)]
+		if self.checkRepeat(player,pmove1,pmove2,(spot,(i-1,j+1))) and self.testMove(board, (spot,(i-1,j+1)),player): res += [Node(board,(spot,(i-1,j+1)),player*-1,self,depth,pmove1,pmove2)]
+		if self.checkRepeat(player,pmove1,pmove2,(spot,(i-1,j-1))) and self.testMove(board, (spot,(i-1,j-1)),player): res += [Node(board,(spot,(i-1,j-1)),player*-1,self,depth,pmove1,pmove2)]
+		if self.checkRepeat(player,pmove1,pmove2,(spot,(i+1,j-1))) and self.testMove(board, (spot,(i+1,j-1)),player): res += [Node(board,(spot,(i+1,j-1)),player*-1,self,depth,pmove1,pmove2)]
 		return res
 	
+	def checkRepeat(self, player, pmove1,pmove2,move): 
+		if player == -1:
+			if pmove1[-1:] == [move]: return False
+		else:
+			if pmove2[-1:] == [move]: return False
+		return True
+
 	def testMove(self, board, move, player):
+		if move[1][0] < 0 or move[1][1] < 0:
+			return False 
 		if self.checkWin(board): return False
 		if move[0] == move[1]:
 			return False
@@ -93,6 +129,7 @@ class Bot:
 
 	def makeMove(self, board, move, player):
 		if self.checkWin(board): return False
+		if move[1][0] < 0 or move[1][1] < 0: return False
 		if move[0] == move[1]:
 			print("cannot make move without moving")
 			return False
@@ -112,14 +149,14 @@ class Bot:
 			if move[0][0] % 2 == 0 and move[0][1] % 2 == 0 and move[1][0] % 2 == 1 and move[1][1] % 2 == 1:
 				board[move[0][0]][move[0][1]] = 0
 				board[move[1][0]][move[1][1]] = player
-				print("player: " + str(player) + " moved")
+				# print("player: " + str(player) + " moved")
 				self.ganh(board,move[1])
 				self.chet(board,move[1])
 				return True
 			if move[1][0] % 2 == 0 and move[1][1] % 2 == 0 and move[0][0] % 2 == 1 and move[0][1] % 2 == 1:
 				board[move[0][0]][move[0][1]] = 0
 				board[move[1][0]][move[1][1]] = player
-				print("player: " + str(player) + " moved")
+				# print("player: " + str(player) + " moved")
 				self.ganh(board,move[1])
 				self.chet(board,move[1])
 				return True
@@ -129,7 +166,7 @@ class Bot:
 		board[move[1][0]][move[1][1]] = player
 		self.ganh(board,move[1])
 		self.chet(board,move[1])
-		print("player: " + str(player) + " moved")
+		# print("player: " + str(player) + " moved")
 		return True
 
 	def ganh(self, board, spot):
@@ -240,23 +277,53 @@ class Bot:
 		return
 
 
-	def checkWin(self, board):
-		for i in board:
-			if len(set(i)) == 3: return False
-		return True
-
+	def checkWin(self,board):
+		pnum = self.countPiece(board,1)
+		if pnum == 16 or pnum == 0: return True
+		return False
+	
 	def checkWinSide(self, board, side):
-		r = []
-		for i in board:
-			
-			if len(set(i)) == 3: return 0
-			if len(set(i)) == 2: r = list(set(i))
-
-		if r[1] != side: return -1
-		return 1
-			
+		pnum = self.countPiece(board,side)
+		if pnum == 16: return 1
+		if pnum == 0: return -1
+		return 0
 				
 
 
 		
-			
+class Node:
+
+	time = 0
+	def __init__(self, board, move, player, bot:Bot,depth,pmove1,pmove2) -> None:
+		self.depth = depth
+		
+		if player == -1: 
+			self.pmove1 = [move]
+			self.pmove2 = pmove2
+
+		else: 
+			self.pmove2 =[move]
+			self.pmove1 = pmove1
+
+		self.player = player
+		self.board = copy.deepcopy(board)
+		self.move = move
+		if move != None: bot.makeMove(self.board,self.move,player*-1)
+
+		# self.children = []
+
+	# def __lt__(self,other):
+	# 	self.count < other.count
+
+	# def __str__(self) -> str:
+	# 	return self.count
+
+	# def __gt__(self,other):
+	# 	self.count > other.count
+	
+	def isDetour(self,range):
+		if range <= 0 or self.move == None or self.parent == None or self.parent.parent == None or self.parent.move == None or self.parent.parent.move == None: return False
+		# print(self.move,"??", self.parent.parent.move, self.move == self.parent.parent.move)
+		if self.move[1] == self.parent.parent.move[0] and self.move[0] == self.parent.parent.move[1]: return True
+		self.parent.parent.isDetour(range-2)
+
