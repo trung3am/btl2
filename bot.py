@@ -4,6 +4,8 @@ import time
 import copy
 
 class Bot:
+	history = []
+	defensive = 0
 	def __init__(self,side, game: Game) -> None:
 		self.game = game
 		self.side = side
@@ -12,7 +14,7 @@ class Bot:
 
 		pool = []
 		for i in range(5):
-			for j in range(5):
+			for j in range(5):	
 				if self.game.board[i][j]==-1: pool+= [(i,j)]
 		if pool == []: return
 		while True:
@@ -24,24 +26,36 @@ class Bot:
 
 	def move(self, preboard, board, player, remain_time_x, remain_time_o):
 		Node.time = time.time()
-		root = Node(board, None, player,self,0,[],[])
-
-		m = self.minimax(root, False,player,5,0,16)
+		root = Node(board, None, player,self,0)
+		countPre =  self.countPiece(board, player)
+		m = self.minimax(root, True,player,5,0,16)
 		
-		print(m[1])
+		print("minimax moved: ",m[1])
 		self.game.makeMove(m[1],player)
+		if countPre - self.countPiece(self.game.board,player) == 0:
+			Bot.defensive += 1
+		else:
+			Bot.defensive = 0
+		Bot.history += [m[1]]
 		print(str(time.time()-Node.time))
 
 
 	def minimax(self,node,maxplayer,player,maxDepth,alpha,beta):
-		
-		if maxDepth <= node.depth : return(self.countPiece(node.board, player),node.move)
+		if maxDepth <= node.depth or time.time() - Node.time > 5: return(self.countPiece(node.board, player),node.move)
 
 		if maxplayer:
 			bestVal = 0
 			pool = self.gmove(node)
 			if len(pool) == 0: return (self.countPiece(node.board, player),node.move)
 			res = pool[0].move
+			if node.depth == 0 and Bot.defensive >= 3 :
+				c = 0
+				for i in pool:
+					temp = self.countPiece(i.board, player) - self.countPiece(node.board,player)
+					if temp > c:
+						c = temp
+						res = i.move
+				if c > 0: return (c,res)
 			for i in pool:
 				v = self.minimax(i,not maxplayer, player,maxDepth,alpha,beta)
 				bestVal = max(bestVal,v[0])
@@ -78,31 +92,30 @@ class Bot:
 		for i in range(5):
 			for j in range(5):
 				
-				if node.board[i][j]==node.player: pool+= self.generateMove((i,j),node.board,node.player,node.depth+1,node.pmove1,node.pmove2)
+				if node.board[i][j]==node.player: pool+= self.generateMove((i,j),node.board,node.player,node.depth+1)
 		# pool.sort()
 
 		return pool
 
-	def generateMove(self, spot,board,player,depth,pmove1,pmove2):
+
+
+	def generateMove(self, spot,board,player,depth):
 		
 		res = []
 		i = spot[0]
 		j = spot[1]
-		if self.checkRepeat(player,pmove1,pmove2,(spot,(i+1,j))) and self.testMove(board, (spot,(i+1,j)),player): res += [Node(board,(spot,(i+1,j)),player*-1,self,depth,pmove1,pmove2)]
-		if self.checkRepeat(player,pmove1,pmove2,(spot,(i-1,j))) and self.testMove(board, (spot,(i-1,j)),player): res += [Node(board,(spot,(i-1,j)),player*-1,self,depth,pmove1,pmove2)]
-		if self.checkRepeat(player,pmove1,pmove2,(spot,(i,j+1))) and self.testMove(board, (spot,(i,j+1)),player): res += [Node(board,(spot,(i,j+1)),player*-1,self,depth,pmove1,pmove2)]
-		if self.checkRepeat(player,pmove1,pmove2,(spot,(i,j-1))) and self.testMove(board, (spot,(i,j-1)),player): res += [Node(board,(spot,(i,j-1)),player*-1,self,depth,pmove1,pmove2)]
-		if self.checkRepeat(player,pmove1,pmove2,(spot,(i+1,j+1))) and self.testMove(board, (spot,(i+1,j+1)),player): res += [Node(board,(spot,(i+1,j+1)),player*-1,self,depth,pmove1,pmove2)]
-		if self.checkRepeat(player,pmove1,pmove2,(spot,(i-1,j+1))) and self.testMove(board, (spot,(i-1,j+1)),player): res += [Node(board,(spot,(i-1,j+1)),player*-1,self,depth,pmove1,pmove2)]
-		if self.checkRepeat(player,pmove1,pmove2,(spot,(i-1,j-1))) and self.testMove(board, (spot,(i-1,j-1)),player): res += [Node(board,(spot,(i-1,j-1)),player*-1,self,depth,pmove1,pmove2)]
-		if self.checkRepeat(player,pmove1,pmove2,(spot,(i+1,j-1))) and self.testMove(board, (spot,(i+1,j-1)),player): res += [Node(board,(spot,(i+1,j-1)),player*-1,self,depth,pmove1,pmove2)]
+		if self.checkRepeat((spot,(i+1,j))) and self.testMove(board, (spot,(i+1,j)),player): res += [Node(board,(spot,(i+1,j)),player*-1,self,depth)]
+		if self.checkRepeat((spot,(i-1,j))) and self.testMove(board, (spot,(i-1,j)),player): res += [Node(board,(spot,(i-1,j)),player*-1,self,depth)]
+		if self.checkRepeat((spot,(i,j+1))) and self.testMove(board, (spot,(i,j+1)),player): res += [Node(board,(spot,(i,j+1)),player*-1,self,depth)]
+		if self.checkRepeat((spot,(i,j-1))) and self.testMove(board, (spot,(i,j-1)),player): res += [Node(board,(spot,(i,j-1)),player*-1,self,depth)]
+		if self.checkRepeat((spot,(i+1,j+1))) and self.testMove(board, (spot,(i+1,j+1)),player): res += [Node(board,(spot,(i+1,j+1)),player*-1,self,depth)]
+		if self.checkRepeat((spot,(i-1,j+1))) and self.testMove(board, (spot,(i-1,j+1)),player): res += [Node(board,(spot,(i-1,j+1)),player*-1,self,depth)]
+		if self.checkRepeat((spot,(i-1,j-1))) and self.testMove(board, (spot,(i-1,j-1)),player): res += [Node(board,(spot,(i-1,j-1)),player*-1,self,depth)]
+		if self.checkRepeat((spot,(i+1,j-1))) and self.testMove(board, (spot,(i+1,j-1)),player): res += [Node(board,(spot,(i+1,j-1)),player*-1,self,depth)]
 		return res
 	
-	def checkRepeat(self, player, pmove1,pmove2,move): 
-		if player == -1:
-			if pmove1[-1:] == [move]: return False
-		else:
-			if pmove2[-1:] == [move]: return False
+	def checkRepeat(self,move): 
+		if len(set(Bot.history[-10:])) == len(set(Bot.history[-10:]+[move])): return False
 		return True
 
 	def testMove(self, board, move, player):
@@ -294,16 +307,16 @@ class Bot:
 class Node:
 
 	time = 0
-	def __init__(self, board, move, player, bot:Bot,depth,pmove1,pmove2) -> None:
+	def __init__(self, board, move, player, bot:Bot,depth) -> None:
 		self.depth = depth
 		
-		if player == -1: 
-			self.pmove1 = [move]
-			self.pmove2 = pmove2
+		# if player == -1: 
+		# 	self.pmove1 = [move]
+		# 	self.pmove2 = pmove2
 
-		else: 
-			self.pmove2 =[move]
-			self.pmove1 = pmove1
+		# else: 
+		# 	self.pmove2 =[move]
+		# 	self.pmove1 = pmove1
 
 		self.player = player
 		self.board = copy.deepcopy(board)
