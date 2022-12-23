@@ -24,11 +24,11 @@ class Bot:
 			move = (random.randint(max(0,pick[0]-1),min(4,pick[0]+1)),random.randint(max(0,pick[1]-1),min(4,pick[1]+1)))
 			if self.game.makeMove((pick,move),self.side): break
 
-	def move(self, preboard, board, player, remain_time_x, remain_time_o):
+	def move(self, preboard, board, player, remain_time_x, remain_time_o,defensive):
 		Node.time = time.time()
 		root = Node(board, None, player,self,0)
 		countPre =  self.countPiece(board, player)
-		m = self.minimax(root, True,player,5,0,16)
+		m = self.minimax(root, True,player,4,0,16,defensive)
 		
 		print("minimax moved: ",m[1])
 		self.game.makeMove(m[1],player)
@@ -40,7 +40,7 @@ class Bot:
 		print(str(time.time()-Node.time))
 
 
-	def minimax(self,node,maxplayer,player,maxDepth,alpha,beta):
+	def minimax(self,node,maxplayer,player,maxDepth,alpha,beta,defensive = 0):
 		if maxDepth <= node.depth or time.time() - Node.time > 5: return(self.countPiece(node.board, player),node.move)
 
 		if maxplayer:
@@ -48,13 +48,14 @@ class Bot:
 			pool = self.gmove(node)
 			if len(pool) == 0: return (self.countPiece(node.board, player),node.move)
 			res = pool[0].move
-			if node.depth == 0 and Bot.defensive >= 3 :
+			if node.depth == 0 and Bot.defensive >= defensive :
 				c = 0
 				for i in pool:
 					temp = self.countPiece(i.board, player) - self.countPiece(node.board,player)
 					if temp > c:
 						c = temp
 						res = i.move
+				print("defensive: ", c)
 				if c > 0: return (c,res)
 			for i in pool:
 				v = self.minimax(i,not maxplayer, player,maxDepth,alpha,beta)
@@ -115,7 +116,7 @@ class Bot:
 		return res
 	
 	def checkRepeat(self,move): 
-		if len(set(Bot.history[-10:])) == len(set(Bot.history[-10:]+[move])): return False
+		if len(set(Bot.history[-8:])) == len(set(Bot.history[-8:]+[move])): return False
 		return True
 
 	def testMove(self, board, move, player):
