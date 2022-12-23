@@ -4,6 +4,7 @@ from bot import Bot
 import time
 import copy
 import os
+import random
 FPS = 60
 # rgb
 RED = (255, 0, 0)
@@ -30,39 +31,59 @@ def nPrint(game):
       res += str(j) + ' '
   print(res)
 
+def randomMove(game,board,player):
+
+  pool = []
+  for i in range(5):
+    for j in range(5):	
+      if board[i][j]==player: pool+= [(i,j)]
+  if pool == []: return
+  while True:
+
+
+    pick  = random.choice(pool)
+    move = (random.randint(max(0,pick[0]-1),min(4,pick[0]+1)),random.randint(max(0,pick[1]-1),min(4,pick[1]+1)))
+    if game.makeMove((pick,move),player): break
+
 def main():
+  s=0
   run = True
   clock = pygame.time.Clock()
   game = Game(win)
   game.draw()
   init = copy.deepcopy(game.board)
-  bot = Bot(botside,game)
+  bot = Bot()
   select = False
   sRow = 0
   sCol = 0
   t = time.time()
   count = 0
-  os.remove('output.txt')
+  try:
+    os.remove('output.txt')
+  except:
+    print("cannot find output.txt")
   while True:
-    if count == 10:
+    if count == 20:
       pygame.quit()
       break
     clock.tick(FPS)
-    print("a")
     w = bot.countPiece(game.board,1)
     if  w == 0 or w == 16 :
       print("win" , str(w))
       count+= 1
       f = open('output.txt', 'a')
       f.write("time: "+ str(time.time()-t))
-      f.write("win: " + str(w))
+      f.write("win: " + str(w) + "step: " + str(s) + '\n')
       f.close()
       t = time.time()
       game.board = copy.deepcopy(init)
-    bot.move(game.board,game.board,-1,0,0,3)
+      s=0
+    randomMove(game,game.board,1)
+    s+=1
     nPrint(game)
     game.draw()
-    bot.move(game.board,game.board,1,0,0,4)
+    game.makeMove(bot.move(game.board,game.board,-1,0,0),-1)
+    s+=1
     nPrint(game)
     game.draw()
   
