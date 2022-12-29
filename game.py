@@ -94,7 +94,7 @@ class Game:
         self.board[move[1][0]][move[1][1]] = player
         # print("player: " + str(player) + " moved")
         self.ganh(move[1])
-        self.chet(move[1])
+        # self.chet(move[1])
         self.lastMoveIdx = move[1]
         return True
       if move[1][0] % 2 == 0 and move[1][1] % 2 == 0 and move[0][0] % 2 == 1 and move[0][1] % 2 == 1:
@@ -102,7 +102,7 @@ class Game:
         self.board[move[1][0]][move[1][1]] = player
         # print("player: " + str(player) + " moved")
         self.ganh(move[1])
-        self.chet(move[1])
+        # self.chet(move[1])
         self.lastMoveIdx = move[1]
         return True
       # print("invalid move")
@@ -110,7 +110,7 @@ class Game:
     self.board[move[0][0]][move[0][1]] = 0
     self.board[move[1][0]][move[1][1]] = player
     self.ganh(move[1])
-    self.chet(move[1])
+    # self.chet(move[1])
     self.lastMoveIdx = move[1]
     # print("player: " + str(player) + " moved")
     return True

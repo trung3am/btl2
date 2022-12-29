@@ -10,15 +10,19 @@ class Bot:
 	defensive = 0
 	cp = 0
 	stuck = 0
+	first = False
 	def __init__(self) -> None:
 		pass
-	def randomMove(self,board,player):
+	def randomMove(self,prev_board, board,player):
 
 		pool = []
 		root = Node(board, None, player,self,0)
 		pool = self.gmove(root,True)
 		if pool == []: return None
-
+		res = self.checkMo(prev_board, board)
+		if res[0]:
+			for i in pool:
+				if i.move == res[1]: return i.move
 		pick  = random.choice(pool)
 		return(pick.move)
 
@@ -26,14 +30,15 @@ class Bot:
 		Node.time = time.time()
 		root = Node(board, None, player,self,0)
 		countPre =  self.countPiece(board, player)
-		m = self.minimax(root, True,player,3,0,20,1)
-		# print(m)
+		if prev_board == None: Bot.first = True
+		if Bot.first: m = self.minimax(prev_board, root, True,player,3,0,20,1)
+		else: m = self.minimax(prev_board, root, True,player,3,0,20,2)
+		
 		if countPre == Bot.cp: Bot.stuck+= 1
 		else:
 			Bot.cp = countPre
 			Bot.stuck == 0
-		# print("yes" + str(Bot.defensive) + "---" + str(countPre - m[0]) + "----" + str(Bot.stuck))
-		# self.game.makeMove(m[1],player)
+
 		if countPre - m[0] == 0 or Bot.stuck >= 2:
 			Bot.defensive += 1
 		else:
@@ -42,7 +47,9 @@ class Bot:
 		Bot.history += [m[1]]
 		return m[1]
 
-	def minimax(self,node,maxplayer,player,maxDepth,alpha,beta,defensive = 0):
+	def minimax(self,prev_board,node, maxplayer,player,maxDepth,alpha,beta,defensive = 0):
+
+# 		if node.depth == 0: print("check")
 		if maxDepth <= node.depth or time.time() - Node.time > 5 or self.countPiece(node.board, player) == 0: return(self.countPiece(node.board, player),node.move)
 
 		if maxplayer:
@@ -53,6 +60,15 @@ class Bot:
 				Bot.history = []
 				pool = self.gmove(node,player)
 			res = pool[0].move
+# 			if node.depth == 0: print(prev_board)
+			if prev_board!= None:
+				
+				mo = self.checkMo(prev_board, node.board)
+				# if node.depth == 0: print(mo)
+				if mo[0]:
+					for i in pool:
+				# 		if node.depth == 0:print(i.move)
+						if i.move[1] == mo[1]: return (self.countPiece(node.board, player),i.move)
 			if node.depth == 0 and Bot.defensive >= defensive:
 				_res  =res
 				c = 0
@@ -66,8 +82,9 @@ class Bot:
 				
 				if c > 0: return (c,res)
 				return (c,_res)
+
 			for i in pool:
-				v = self.minimax(i,not maxplayer, player,maxDepth,alpha,beta)
+				v = self.minimax(node.board,i,not maxplayer, player,maxDepth,alpha,beta)
 				bestVal = max(bestVal,v[0])
 				if node.depth == 0 and bestVal == v[0]:
 					res = i.move
@@ -79,11 +96,16 @@ class Bot:
 			pool = self.gmove(node,player)
 			if len(pool) == 0: return (self.countPiece(node.board, player),node.move)
 			res = pool[0].move
+			if prev_board!= None:
+				mo = self.checkMo(prev_board, node.board)
+				if mo[0]:
+					for i in pool:
+						if i.move == mo[1]: return (self.countPiece(node.board, player),i.move)
 			for i in pool:
-				v = self.minimax(i,not maxplayer, player,maxDepth,alpha,beta)
+				v = self.minimax(node.board,i,not maxplayer, player,maxDepth,alpha,beta)
 				bestVal = min(bestVal,v[0])
 				if node.depth == 0 and bestVal == v[0]:
-					res = i.move
+					res = i.move[1]
 				beta = min(beta,bestVal)
 				if beta <= alpha: break
 
@@ -152,8 +174,8 @@ class Bot:
 		return res
 	
 	def checkRepeat(self,move,flag): 
-		if not flag : return True
-		if len(set(Bot.history[-8:])) == len(set(Bot.history[-8:]+[move])): return False
+		# if not flag : return True
+		# if len(set(Bot.history[-8:])) == len(set(Bot.history[-8:]+[move])): return False
 		return True
 
 	def testMove(self, board, move, player):
@@ -202,131 +224,93 @@ class Bot:
 				board[move[1][0]][move[1][1]] = player
 				# print("player: " + str(player) + " moved")
 				self.ganh(board,move[1])
-				self.chet(board,move[1])
+				# self.chet(board,move[1])
 				return True
 			if move[1][0] % 2 == 0 and move[1][1] % 2 == 0 and move[0][0] % 2 == 1 and move[0][1] % 2 == 1:
 				board[move[0][0]][move[0][1]] = 0
 				board[move[1][0]][move[1][1]] = player
 				# print("player: " + str(player) + " moved")
 				self.ganh(board,move[1])
-				self.chet(board,move[1])
+				# self.chet(board,move[1])
 				return True
 			print("invalid move")
 			return False
 		board[move[0][0]][move[0][1]] = 0
 		board[move[1][0]][move[1][1]] = player
 		self.ganh(board,move[1])
-		self.chet(board,move[1])
+		# self.chet(board,move[1])
 		# print("player: " + str(player) + " moved")
 		return True
 
 	def ganh(self, board, spot):
-		if spot[0] == 0 and spot[1] == 0: return
-		if spot[0] == 0 and spot[1] == 4: return
-		if spot[0] == 4 and spot[1] == 0: return
-		if spot[0] == 4 and spot[1] == 4: return
+		if spot[0] == 0 and spot[1] == 0: return 
+		if spot[0] == 0 and spot[1] == 4: return 
+		if spot[0] == 4 and spot[1] == 0: return 
+		if spot[0] == 4 and spot[1] == 4: return 
 		if spot[0] == 0 or spot[0] == 4:
 			if board[spot[0]][spot[1]+1] != 0 and board[spot[0]][spot[1]+1] == board[spot[0]][spot[1]-1] and board[spot[0]][spot[1]-1] !=0:
 				board[spot[0]][spot[1]-1] = board[spot[0]][spot[1]]
 				board[spot[0]][spot[1]+1] = board[spot[0]][spot[1]]
-			return
+			return 
 		if spot[1] == 0 or spot[1] == 4:
 			if board[spot[0]+1][spot[1]] != 0 and board[spot[0]+1][spot[1]] == board[spot[0]-1][spot[1]] and board[spot[0]-1][spot[1]] != 0:
 				board[spot[0]-1][spot[1]] = board[spot[0]][spot[1]]
 				board[spot[0]+1][spot[1]] = board[spot[0]][spot[1]]
-			return
+			return 
 		
 		if board[spot[0]+1][spot[1]] !=0 and board[spot[0]+1][spot[1]] == board[spot[0]-1][spot[1]] and board[spot[0]-1][spot[1]] != 0:
 			board[spot[0]-1][spot[1]] = board[spot[0]][spot[1]]
 			board[spot[0]+1][spot[1]] = board[spot[0]][spot[1]]
+			return 
 		if board[spot[0]][spot[1]+1] != 0 and board[spot[0]][spot[1]+1] == board[spot[0]][spot[1]-1] and board[spot[0]][spot[1]-1] != 0:
 			board[spot[0]][spot[1]-1] = board[spot[0]][spot[1]]
 			board[spot[0]][spot[1]+1] = board[spot[0]][spot[1]]
+			return 
 		if board[spot[0]-1][spot[1]-1] !=0 and board[spot[0]-1][spot[1]-1] == board[spot[0]+1][spot[1]+1] and board[spot[0]+1][spot[1]+1] != 0:
 			board[spot[0]-1][spot[1]-1] = board[spot[0]][spot[1]]
 			board[spot[0]+1][spot[1]+1] = board[spot[0]][spot[1]]
+			return 
 		if board[spot[0]-1][spot[1]+1] !=0 and board[spot[0]-1][spot[1]+1] == board[spot[0]+1][spot[1]-1] and board[spot[0]+1][spot[1]-1] != 0:
 			board[spot[0]-1][spot[1]+1] = board[spot[0]][spot[1]]
 			board[spot[0]+1][spot[1]-1] = board[spot[0]][spot[1]]
-		return
+			return 
+		return 
 
-	def checkChet(self, cBoard, spot, player):
-		if cBoard[spot[0]][spot[1]] == 0 or cBoard[spot[0]][spot[1]] == player: return True
-		if cBoard[spot[0]][spot[1]]*player < 0 or cBoard[spot[0]][spot[1]] % 4 == 0: return False
-		cBoard[spot[0]][spot[1]]*=2
-		if spot[0] % 2 == 0 and spot[1] % 2 == 0 or spot[0] % 2 == 1 and spot[1] % 2 == 1:
-			if spot[0]-1 >= 0 and spot[1]-1 >= 0:
-				if self.checkChet(cBoard,(spot[0]-1,spot[1]-1),player): return self.retdiv(cBoard,spot)
-			if spot[0]-1 >= 0 and spot[1]+1 <= 4:
-				if self.checkChet(cBoard,(spot[0]-1,spot[1]+1),player): return self.retdiv(cBoard,spot)
-			if spot[0]+1 <= 4 and spot[1]-1 >= 0:
-				if self.checkChet(cBoard,(spot[0]+1,spot[1]-1),player): return self.retdiv(cBoard,spot)
-			if spot[0]+1 <= 4 and spot[1]+1 <= 4:
-				if self.checkChet(cBoard,(spot[0]+1,spot[1]+1),player): return self.retdiv(cBoard,spot)
-		if spot[0]-1 >= 0:
-			if self.checkChet(cBoard, (spot[0]-1,spot[1]),player): return self.retdiv(cBoard,spot)
-		if spot[0]+1 <= 4:
-			if self.checkChet(cBoard, (spot[0]+1,spot[1]),player): return self.retdiv(cBoard,spot)
-		if spot[1]-1 >= 0:
-			if self.checkChet(cBoard, (spot[0],spot[1]-1),player): return self.retdiv(cBoard,spot)
-		if spot[1]+1 <= 4:
-			if self.checkChet(cBoard, (spot[0],spot[1]+1),player): return self.retdiv(cBoard,spot)
+	def checkGanh(self, board, spot):
+		if spot[0] == 0 and spot[1] == 0: return False
+		if spot[0] == 0 and spot[1] == 4: return False
+		if spot[0] == 4 and spot[1] == 0: return False
+		if spot[0] == 4 and spot[1] == 4: return False
+		if spot[0] == 0 or spot[0] == 4:
+			if board[spot[0]][spot[1]+1] != 0 and board[spot[0]][spot[1]+1] == board[spot[0]][spot[1]-1] and board[spot[0]][spot[1]-1] !=0:
+				return True
+			return False
+		if spot[1] == 0 or spot[1] == 4:
+			if board[spot[0]+1][spot[1]] != 0 and board[spot[0]+1][spot[1]] == board[spot[0]-1][spot[1]] and board[spot[0]-1][spot[1]] != 0:
+				return True
+			return False
+		if board[spot[0]+1][spot[1]] !=0 and board[spot[0]+1][spot[1]] == board[spot[0]-1][spot[1]] and board[spot[0]-1][spot[1]] != 0:
+			return True
+		if board[spot[0]][spot[1]+1] != 0 and board[spot[0]][spot[1]+1] == board[spot[0]][spot[1]-1] and board[spot[0]][spot[1]-1] != 0:
+			return True
+		if board[spot[0]-1][spot[1]-1] !=0 and board[spot[0]-1][spot[1]-1] == board[spot[0]+1][spot[1]+1] and board[spot[0]+1][spot[1]+1] != 0:
+			return True
+		if board[spot[0]-1][spot[1]+1] !=0 and board[spot[0]-1][spot[1]+1] == board[spot[0]+1][spot[1]-1] and board[spot[0]+1][spot[1]-1] != 0:
+			return True
 		return False
 
+	def checkMo(self, prev_board, board):
 
-	def retdiv(self, cBoard,spot):
-		cBoard[spot[0]][spot[1]]/=2
-		return True
-
-	def checkStuck(self, cBoard, spot, player):
-		if cBoard[spot[0]][spot[1]]*player <= 0:
-			return
-		if (spot[0] % 2 == 0 and spot[1] % 2 == 0 ) or (spot[0] % 2 == 1 and spot[1] % 2 == 1):
-			if spot[0]-1 >= 0 and spot[1]-1 >= 0:
-				if cBoard[spot[0]-1][spot[1]-1] == 0: 
-					return
-			if spot[0]-1 >= 0 and spot[1]+1 <= 4:
-				if cBoard[spot[0]-1][spot[1]+1] == 0: 
-					return
-			if spot[0]+1 <= 4 and spot[1]-1 >= 0:
-				if cBoard[spot[0]+1][spot[1]-1] == 0: 
-					return
-			if spot[0]+1 <= 4 and spot[1]+1 <= 4:
-				if cBoard[spot[0]+1][spot[1]+1] == 0: 
-					return
-
-		if spot[0]-1 >= 0:
-			if cBoard[spot[0]-1][spot[1]] == 0:
-				return
-		if spot[0]+1  <= 4:
-			if cBoard[spot[0]+1][spot[1]] == 0:
-				return
-		if spot[1]-1 >= 0:
-			if cBoard[spot[0]][spot[1]-1] == 0:
-				return
-		if spot[1]+1 <= 4:
-			if cBoard[spot[0]][spot[1]+1] == 0:
-				return
-		cBoard[spot[0]][spot[1]]*=2
-		return
-
-	def chet(self, board, spot):
-		player = board[spot[0]][spot[1]]*-1
-		cBoard = copy.deepcopy(board)
-		for i in range(len(board)):
-			for j in range(len(board[i])):
-				self.checkStuck(cBoard,(i,j),player)
-		for i in range(len(board)):
-			for j in range(len(board[i])):
-				if cBoard[i][j]*player <=0: continue
-				tBoard = copy.deepcopy(cBoard)
-				if not self.checkChet(cBoard,(i,j),player):
-					tBoard[i][j] = player*-1
-					board[i][j] = player*-1
-					cBoard = tBoard
-				
-		return
-
+		res = (0,0)
+		count = 0
+		for i in range(5):
+			for j in range(5):
+				if prev_board[i][j] != board[i][j]: 
+					if board[i][j] == 0: res = (i,j)
+					count +=1
+		if count > 2: return (False, res)
+		_res = self.checkGanh(board,res)
+		return (_res, res)
 
 	def checkWin(self,board):
 		pnum = self.countPiece(board,1)
@@ -339,42 +323,6 @@ class Bot:
 		if pnum == 0: return -1
 		return 0
 
-	def countWeakSpot(self,board, player):
-		res = 0
-		for i in range(len(board)):
-			for j in range(len(board)):
-				res += self.weakspot(board,(i,j),player)
-		return res
-
-	def weakspot(self, board, spot, player):
-		if spot[0] == 0 and spot[1] == 0: return 0
-		if spot[0] == 0 and spot[1] == 4: return 0
-		if spot[0] == 4 and spot[1] == 0: return 0
-		if spot[0] == 4 and spot[1] == 4: return 0
-		if spot[0] == 0 or spot[0] == 4:
-			if board[spot[0]][spot[1]+1] == player and board[spot[0]][spot[1]+1] == board[spot[0]][spot[1]-1] and board[spot[0]][spot[1]-1] ==player:
-				return 1
-
-			return 0
-		if spot[1] == 0 or spot[1] == 4:
-			if board[spot[0]+1][spot[1]] == player and board[spot[0]+1][spot[1]] == board[spot[0]-1][spot[1]] and board[spot[0]-1][spot[1]] == player:
-				return 1
-
-			return 0
-		
-		if board[spot[0]+1][spot[1]] == player and board[spot[0]+1][spot[1]] == board[spot[0]-1][spot[1]] and board[spot[0]-1][spot[1]] == player:
-			return 1
-
-		if board[spot[0]][spot[1]+1] == player and board[spot[0]][spot[1]+1] == board[spot[0]][spot[1]-1] and board[spot[0]][spot[1]-1] == player:
-			return 1
-
-		if board[spot[0]-1][spot[1]-1] == player and board[spot[0]-1][spot[1]-1] == board[spot[0]+1][spot[1]+1] and board[spot[0]+1][spot[1]+1] == player:
-			return 1
-
-		if board[spot[0]-1][spot[1]+1] == player and board[spot[0]-1][spot[1]+1] == board[spot[0]+1][spot[1]-1] and board[spot[0]+1][spot[1]-1] == player:
-			return 1
-
-		return 0
 
 		
 class Node:
@@ -395,5 +343,5 @@ def move( prev_board, board, player, remain_time_x, remain_time_o):
 	# print(board)
 	x = bot.move(prev_board, board, player, remain_time_x, remain_time_o)
 
-	print(x)
-	# return  x
+# 	print("di" +str(x))
+	return  x

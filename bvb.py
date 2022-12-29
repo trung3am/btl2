@@ -58,6 +58,7 @@ def main():
   sCol = 0
   t = time.time()
   count = 0
+  prev_board = copy.deepcopy(init)
   try:
     os.remove('output.txt')
   except:
@@ -78,11 +79,13 @@ def main():
       t = time.time()
       game.board = copy.deepcopy(init)
       s=0
-    randomMove(game,game.board,1)
+    game.makeMove(bot.randomMove(prev_board,game.board,1),1)
+    prev_board = copy.deepcopy(game.board)
     s+=1
     nPrint(game)
     game.draw()
-    game.makeMove(bot.move(game.board,game.board,-1,0,0),-1)
+    game.makeMove(bot.move(prev_board,game.board,-1,0,0),-1)
+    prev_board = copy.deepcopy(game.board)
     s+=1
     nPrint(game)
     game.draw()
