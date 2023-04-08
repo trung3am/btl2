@@ -146,8 +146,11 @@ def pvp():
   load = False
   p1 = (200,40)
   p2 = (200,620)
-
+  turn = (450,10)
   while r:
+    c = RED if game.turn == True else BLUE
+    t = "RED TURN" if game.turn == True else "BLUE TURN"
+    displayTurn = font.render(t,True,c)
     if  state["wl"] !=0:
       wl = "Win" if state["wl"] == state["side"] else "Lose"
       img = font.render(state[state["wl"]] + "Win" + ' !!!', True, (255,242,0))
@@ -172,6 +175,7 @@ def pvp():
       win.blit(player2,p2)
       win.blit(score1,s1)
       win.blit(score2,s2)
+      win.blit(displayTurn,turn)
     win.blit(txtExit,(exit.x +5, exit.y +5))
     pygame.draw.rect(win, color, exit, 2)
     pygame.display.flip()
@@ -187,10 +191,12 @@ def pvp():
       win.blit(img, (250, 300))
     win.blit(txtExit,(exit.x +5, exit.y +5))
     pygame.draw.rect(win, color, exit, 2)
-    win.blit(player1,p1)
-    win.blit(player2,p2)
-    win.blit(score1,s1)
-    win.blit(score2,s2)
+    if state["side"] != 0:
+      win.blit(player1,p1)
+      win.blit(player2,p2)
+      win.blit(score1,s1)
+      win.blit(score2,s2)
+      win.blit(displayTurn,turn)
     pygame.display.flip()
     for event in pygame.event.get():
       if event.type == pygame.QUIT:
