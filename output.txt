@@ -1,1 +1,11 @@
-time: 1.4564859867095947win: 0step: 102
+time: 0.5999963283538818win: 1 BLUE RL Piece(s)16 step: 8
+time: 6.503003358840942win: 1 BLUE RL Piece(s)16 step: 96
+time: 3.1229989528656006win: -1 RED RL Piece(s)0 step: 39
+time: 10.658597946166992win: -1 RED RL Piece(s)0 step: 171
+time: 3.3739945888519287win: -1 RED RL Piece(s)0 step: 39
+time: 6.602999210357666win: -1 RED RL Piece(s)0 step: 97
+time: 6.253000736236572win: -1 RED RL Piece(s)0 step: 93
+time: 2.391000270843506win: -1 RED RL Piece(s)0 step: 19
+time: 9.883872747421265win: -1 RED RL Piece(s)0 step: 151
+time: 5.454000949859619win: -1 RED RL Piece(s)0 step: 75
+time: 4.688999891281128win: -1 RED RL Piece(s)0 step: 61

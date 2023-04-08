@@ -19,14 +19,15 @@ class Bot:
 		root = Node(board, None, player,self,0)
 		pool = self.gmove(root,True)
 		if pool == []: return None
-		res = self.checkMo(prev_board, board)
-		if res[0]:
-			for i in pool:
-				if i.move == res[1]: return i.move
+		if prev_board != None:
+			res = self.checkMo(prev_board, board)
+			if res[0]:
+				for i in pool:
+					if i.move == res[1]: return i.move
 		pick  = random.choice(pool)
 		return(pick.move)
 
-	def move(self, prev_board, board, player, remain_time_x, remain_time_o):
+	def move(self, prev_board, board, player):
 		Node.time = time.time()
 		root = Node(board, None, player,self,0)
 		countPre =  self.countPiece(board, player)
@@ -308,7 +309,7 @@ class Bot:
 				if prev_board[i][j] != board[i][j]: 
 					if board[i][j] == 0: res = (i,j)
 					count +=1
-		if count > 2: return (False, res)
+		# if count > 2: return (False, res)
 		_res = self.checkGanh(board,res)
 		return (_res, res)
 

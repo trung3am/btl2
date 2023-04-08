@@ -1,7 +1,8 @@
 import pygame
 from game import Game
-from bot import Bot
 import time
+from pvb import playVsBot
+from pvp import pvp as PlayOnline
 FPS = 60
 # rgb
 RED = (255, 0, 0)
@@ -16,81 +17,57 @@ pygame.init()
 win = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption('Checkers')
 font = pygame.font.SysFont(None, 50)
-img = font.render('You Win !!!', True, RED)
-botside = -1
-playerside = 1
 
-def get_row_col_from_mouse(pos):
-	x, y = pos
-	row = y // SQUARE_SIZE
-	col = x // SQUARE_SIZE
-	return row, col
+
+# playVsBot("RL")
 
 def main():
 	run = True
-	clock = pygame.time.Clock()
-	game = Game(win)
-	game.draw()
-	bot = Bot(botside,game)
-	select = False
-	sRow = 0
-	sCol = 0
-
-	while run:
-		clock.tick(FPS)
-		if  game.checkWin():
-			print("win" , game.board)
-			wl = "Win" if game.board[game.lastMoveIdx[0]][game.lastMoveIdx[1]] ==1 else "Lose"
-			img = font.render('You ' + wl + ' !!!', True, RED)
-			win.blit(img, (300, 20))
-		for event in pygame.event.get():
-			if event.type == pygame.QUIT:
-				run = False
-			
-			if event.type == pygame.MOUSEBUTTONDOWN:
-				pos = pygame.mouse.get_pos()
-				row, col = get_row_col_from_mouse(pos)
-
-				if select:
-					if game.board[row][col] == 0:
-						if game.makeMove(((sRow,sCol),(row,col)),playerside):
-							select = False
-							game.draw()
-							res = ""
-							print(game.board)
-							for i in game.board:
-								for j in i:
-									res += str(j) + ' '
-							print(res)
-							bot.move(game.board,game.board,botside,0,0)
-							
-							# time.sleep(1.5)
-							game.draw()
-							print(game.board)
-							if game.checkWin():
-								print("win2" , game.board)
-								wl = "Win" if game.board[game.lastMoveIdx[0]][game.lastMoveIdx[1]] ==1 else "Lose"
-								img = font.render('You ' + wl + ' !!!', True, RED)
-								win.blit(img, (300, 20))
-							game.draw()
-							continue
-					game.deSelect(sRow,sCol)
-					select = False
-				else: 
-					if game.board[row][col] == 0: continue
-					game.select(row,col)
-					if game.checkWin():
-						print("win3" , game.board)
-						wl = "Win" if game.board[game.lastMoveIdx[0]][game.lastMoveIdx[1]] ==1 else "Lose"
-						img = font.render('You ' + wl + ' !!!', True, RED)
-						win.blit(img, (300, 20))
-					sRow = row
-					sCol = col
-					select = True
+	mode = ""
+	ez = pygame.Rect(100, 100, 450, 50)
+	medium = pygame.Rect(100, 250, 450, 50)
+	pvp = pygame.Rect(100, 400, 450, 50)
+	exit = pygame.Rect(100, 550, 450, 50)
+	color = pygame.Color('lightskyblue3')
 	
-					
-
-
-	pygame.quit()
+	txtEZ = font.render("Play vs Bot Easy(Minimax)",True, color)
+	txtMED = font.render("Play vs Bot Medium(RL)",True, color)
+	txtPVP = font.render("Play Online",True, color)
+	txtExit = font.render("Exit Game",True, color)
+	
+	while run:
+		win.fill((30,30,30))
+		if mode == "MINIMAX" or mode == "RL":
+			playVsBot(mode)
+			mode = ""
+		if mode == "PVP":
+			PlayOnline()
+			mode = ""
+		win.blit(txtEZ,(ez.x+5,ez.y+5))
+		pygame.draw.rect(win, color, ez, 2)
+		win.blit(txtMED,(medium.x+23,medium.y+5))
+		pygame.draw.rect(win, color, medium, 2)
+		win.blit(txtPVP,(pvp.x+130,pvp.y+5))
+		pygame.draw.rect(win, color, pvp, 2)
+		win.blit(txtExit,(exit.x+137,exit.y+5))
+		pygame.draw.rect(win, color, exit, 2)
+		
+		pygame.display.flip()
+		for event in pygame.event.get():
+				if event.type == pygame.QUIT:
+					run = False
+				if event.type == pygame.MOUSEBUTTONDOWN:
+					x,y = pygame.mouse.get_pos()
+					if x >= 100 and x <= 550:
+						if y >=100 and y <= 150:
+							mode = "MINIMAX"
+						if y >=250 and y <= 300:
+							mode = "RL"
+						if y >=400 and y <= 450:
+							mode = "PVP"
+						if y >=550 and y <= 600:
+							mode = "Exit"
+							run = False
 
 main()
+

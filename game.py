@@ -31,6 +31,7 @@ class Game:
 
   def __init__(self, win) -> None:
     self.win = win
+    self.turn = True
     self.lastMoveIdx = (0,0)
     self.board = [[1, 1, 1, 1, 1],
                   [1, 0, 0, 0, 1],
@@ -67,10 +68,15 @@ class Game:
     
   def deSelect(self,row,col):
     stepH = HEIGHT/6
-    pygame.draw.circle(self.win,RED if self.board[row][col]>0 else BLUE,(stepH*(1+col),stepH*(1+row)),20,200)
+    c = RED
+    if self.board[row][col] == -1: c= BLUE
+    if self.board[row][col] == 0: return
+
+    pygame.draw.circle(self.win,c,(stepH*(1+col),stepH*(1+row)),20,200)
     pygame.display.flip()
     
   def makeMove(self, move, player):
+    if self.turn != (player==1): return False
     if self.checkWin(): return False
     if move[1][0] < 0 or move[1][1] < 0: return False
     if move[0] == move[1]:
@@ -94,24 +100,75 @@ class Game:
         self.board[move[1][0]][move[1][1]] = player
         # print("player: " + str(player) + " moved")
         self.ganh(move[1])
-        # self.chet(move[1])
+        self.chet(move[1])
         self.lastMoveIdx = move[1]
+        self.turn = not self.turn
         return True
       if move[1][0] % 2 == 0 and move[1][1] % 2 == 0 and move[0][0] % 2 == 1 and move[0][1] % 2 == 1:
         self.board[move[0][0]][move[0][1]] = 0
         self.board[move[1][0]][move[1][1]] = player
         # print("player: " + str(player) + " moved")
         self.ganh(move[1])
-        # self.chet(move[1])
+        self.chet(move[1])
         self.lastMoveIdx = move[1]
+        self.turn = not self.turn
         return True
       # print("invalid move")
       return False
     self.board[move[0][0]][move[0][1]] = 0
     self.board[move[1][0]][move[1][1]] = player
     self.ganh(move[1])
-    # self.chet(move[1])
+    self.chet(move[1])
     self.lastMoveIdx = move[1]
+    self.turn = not self.turn
+    # print("player: " + str(player) + " moved")
+    return True
+  def checkMove(self, move, player):
+    if self.turn != (player==1): return False
+    if self.checkWin(): return False
+    if move[1][0] < 0 or move[1][1] < 0: return False
+    if move[0] == move[1]:
+      # print("cannot make move without moving")
+      return False
+    if self.board[move[0][0]][move[0][1]] != player:
+      # print("cannot move others unit/spot doesn't have any unit")
+      return False
+    if move[0][0] > 4 or move[0][1] > 4 or move[1][0] > 4 or move[1][1] > 4:
+      # print("out of board move cannot be made")
+      return False
+    if abs(move[0][0] - move[1][0]) > 1 or abs(move[0][1] - move[1][1]) > 1:
+      # print("invalid move(too much reach)")
+      return False
+    if self.board[move[1][0]][move[1][1]] != 0:
+      # print("move blocked by other unit")
+      return False
+    if abs(move[0][0] - move[1][0]) == 1 and abs(move[0][1] - move[1][1]) == 1:
+      if move[0][0] % 2 == 0 and move[0][1] % 2 == 0 and move[1][0] % 2 == 1 and move[1][1] % 2 == 1:
+        # self.board[move[0][0]][move[0][1]] = 0
+        # self.board[move[1][0]][move[1][1]] = player
+        # # print("player: " + str(player) + " moved")
+        # self.ganh(move[1])
+        # self.chet(move[1])
+        # self.lastMoveIdx = move[1]
+        # self.turn = not self.turn
+        return True
+      if move[1][0] % 2 == 0 and move[1][1] % 2 == 0 and move[0][0] % 2 == 1 and move[0][1] % 2 == 1:
+        # self.board[move[0][0]][move[0][1]] = 0
+        # self.board[move[1][0]][move[1][1]] = player
+        # # print("player: " + str(player) + " moved")
+        # self.ganh(move[1])
+        # self.chet(move[1])
+        # self.lastMoveIdx = move[1]
+        # self.turn = not self.turn
+        return True
+      # print("invalid move")
+      return False
+    # self.board[move[0][0]][move[0][1]] = 0
+    # self.board[move[1][0]][move[1][1]] = player
+    # self.ganh(move[1])
+    # self.chet(move[1])
+    # self.lastMoveIdx = move[1]
+    # self.turn = not self.turn
     # print("player: " + str(player) + " moved")
     return True
 

@@ -308,7 +308,7 @@ class Bot:
 				if prev_board[i][j] != board[i][j]: 
 					if board[i][j] == 0: res = (i,j)
 					count +=1
-		if count > 2: return (False, res)
+		# if count > 2: return (False, res)
 		_res = self.checkGanh(board,res)
 		return (_res, res)
 
