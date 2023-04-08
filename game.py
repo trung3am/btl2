@@ -43,7 +43,7 @@ class Game:
   def draw(self):
     stepW = WIDTH/6
     stepH = HEIGHT/6
-    self.win.fill(BLACK)
+    self.win.fill((166,156,89))
     for i in range(5):
       pygame.draw.line(self.win,WHITE,(stepW*(i+1),stepW),(stepW*(i+1),HEIGHT-stepW))
       pygame.draw.line(self.win,WHITE,(stepH,stepH*(i+1)),(WIDTH-stepH,stepH*(i+1)))
