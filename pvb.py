@@ -112,6 +112,7 @@ def playVsBot(mode):
       if wl == "Win": pscore +=1
       else: botscore +=1
       game = Game(win)
+      agent = Agent(game, botside)
       game.draw()
       continue
     for event in pygame.event.get():

@@ -25,8 +25,11 @@ pygame.init()
 win = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption('Checkers')
 font = pygame.font.SysFont(None, 50)
+
+# Local config
 # HOST = "127.0.0.1"
-# PORT = 65432 
+# PORT = 65432
+# config online server 
 HOST = "0.tcp.ap.ngrok.io"
 PORT = 18857
 
